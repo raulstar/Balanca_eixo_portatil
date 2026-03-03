@@ -1,16 +1,13 @@
 #include <Arduino.h>
-#include <EEPROM.h>
 #include "medida.h"
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // ─── Pinos ────────────────────────────────────────────────────────
 #define DOUT_PIN  4
 #define SCK_PIN   5
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // ─── Fator de calibração ──────────────────────────────────────────
 // Ajuste este valor com um peso conhecido para calibrar sua balança
-float fatorDeEscala = 2280.0;
+#define SCALE_FACTOR 2280.0f
 
 // ─── Instância da classe ──────────────────────────────────────────
 Medida medida(DOUT_PIN, SCK_PIN);
@@ -19,7 +16,8 @@ Medida medida(DOUT_PIN, SCK_PIN);
 void setup() {
   Serial.begin(115200);
   delay(500);
-  medida.begin(fatorDeEscala);
+  medida.begin(SCALE_FACTOR);
+
 }
 
 // ─── Loop ─────────────────────────────────────────────────────────
@@ -37,6 +35,7 @@ void loop() {
 
     Serial.printf("│ %15ld │ %13.2f g │ %13.2f g │\n",
                   digitalRaw, rawGrams, filtered);
+
   } else {
     Serial.println("HX711 não está pronto.");
   }
