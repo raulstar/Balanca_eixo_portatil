@@ -84,7 +84,7 @@ const char pagina_html[] PROGMEM = R"rawliteral(
 </head>
 <body>
   <div class="card">
-    <h1>ESP32 Balança</h1>
+    <h1>Balança de eixo Revlo</h1>
 
     <div class="campo">
       <span class="label">Peso Atual</span>
