@@ -8,187 +8,119 @@
 #define DOUT_PIN 4
 #define SCK_PIN 5
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Objetos e Variáveis Globais
 HX711 scale;
 WebServer server(80);
 
 const char *ssid = "REVLO";
 const char *password = "Revlo!2024";
+
 float calibration_factor = 420.0;
 float pesoAtual = 0;
-float mediaFinal = 0;
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-float lerPeso(int amostras, int timeout_ms);
-float calcularMedia(float peso);
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// --- FUNÇÕES DE CONTROLE ---
 
-void realizarCalibracao(float pesoConhecido)
-{
+void realizarCalibracao(float pesoConhecido) {
   Serial.println("\n--- INICIANDO CALIBRAÇÃO ---");
-
-  scale.set_scale();
-  scale.tare();
-  Serial.println("Balança zerada.");
-
-  Serial.print("2. Coloque o peso de ");
+  
+  scale.set_scale(); // Reseta a escala para 1.0 para medir o valor bruto
+  scale.tare();      // Zera a balança sem peso
+  
+  Serial.print("Coloque o peso de ");
   Serial.print(pesoConhecido);
-  Serial.println("g sobre a balança.");
-  Serial.println("Aguardando 10 segundos para estabilização...");
-  delay(8000);
+  Serial.println("g. Aguardando 5s para estabilizar...");
+  delay(5000);
 
-  float leituraBruta = scale.get_units(10);
-
+  // Pega a média de 20 leituras para uma calibração precisa
+  float leituraBruta = scale.get_units(20);
   calibration_factor = leituraBruta / pesoConhecido;
 
   scale.set_scale(calibration_factor);
 
   Serial.println("--- CALIBRAÇÃO CONCLUÍDA ---");
-  Serial.print("Novo Fator de Calibração: ");
+  Serial.print("Novo Fator: ");
   Serial.println(calibration_factor);
-  Serial.println("Anote este valor para usar no código permanentemente.\n");
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-float calcularMedia(float peso)
-{
-  const int NUM_AMOSTRAS = 10;
-  const float LIMITE_INFERIOR = 0.0;
-  const float LIMITE_SUPERIOR = 10000.0;
-  const int TIMEOUT_MS = 500;
+// --- HANDLERS DO SERVIDOR WEB ---
 
-  float amostras[NUM_AMOSTRAS];
-  float soma = 0.0;
-  float media = 0.0;
-  int validas = 0;
-
-  for (int i = 0; i < NUM_AMOSTRAS; i++)
-  {
-    if (!scale.wait_ready_timeout(TIMEOUT_MS))
-    {
-      Serial.println("Timeout na amostra " + String(i));
-      amostras[i] = peso;
-    }
-    else
-    {
-      amostras[i] = scale.get_units(1);
-    }
-
-    if (amostras[i] >= LIMITE_INFERIOR && amostras[i] <= LIMITE_SUPERIOR)
-    {
-      soma += amostras[i];
-      validas++;
-    }
-  }
-
-  if (validas == 0)
-  {
-    Serial.println("Nenhuma amostra válida. Retornando peso recebido.");
-    return peso;
-  }
-
-  media = soma / (float)validas;
-  return media;
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void handleRoot()
-{
+void handleRoot() {
   server.send_P(200, "text/html", pagina_html);
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void handleDados()
-{
+void handleDados() {
+  // Criando o JSON com o peso atualizado no momento da requisição
   String json = "{";
   json += "\"pesoAtual\":" + String(pesoAtual, 4) + ",";
   json += "\"calibration_factor\":" + String(calibration_factor, 4);
   json += "}";
   server.send(200, "application/json", json);
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void handleCalibrar()
-{
-  if (!server.hasArg("peso"))
-  {
-    server.send(400, "text/plain", "Parametro 'peso' ausente.");
-    return;
+void handleCalibrar() {
+  if (server.hasArg("peso")) {
+    float pesoConhecido = server.arg("peso").toFloat();
+    if (pesoConhecido > 0) {
+      realizarCalibracao(pesoConhecido);
+      server.send(200, "text/plain", "Calibrado com " + String(pesoConhecido) + "g");
+      return;
+    }
   }
-  float pesoConhecido = server.arg("peso").toFloat();
-  if (pesoConhecido <= 0)
-  {
-    server.send(400, "text/plain", "Peso invalido.");
-    return;
-  }
-  realizarCalibracao(pesoConhecido);
-  server.send(200, "text/plain", "Calibracao realizada com " + String(pesoConhecido, 2) + " kg.");
+  server.send(400, "text/plain", "Peso invalido");
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void handleZero() {
-  scale.tare();
-  pesoAtual = 0; // Força a variável a zerar para o próximo envio de JSON
-  Serial.println("Tara realizada.");
-  server.send(200, "text/plain", "Zero aplicado com sucesso.");
+  scale.tare(); // A biblioteca limpa o offset interno
+  pesoAtual = 0; // Zera a variável imediatamente para o próximo ciclo
+  Serial.println("Tara realizada via Web.");
+  server.send(200, "text/plain", "Balança zerada com sucesso.");
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void handleNotFound()
-{
-  server.send(404, "text/plain", "Pagina nao encontrada.");
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void setup()
-{
+void setup() {
   Serial.begin(115200);
+  
+  // Inicializa o HX711
   scale.begin(DOUT_PIN, SCK_PIN);
   scale.set_scale(calibration_factor);
   scale.tare();
 
+  // Conexão WiFi
   WiFi.begin(ssid, password);
-  Serial.print("Conectando");
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
+  Serial.println("\nWiFi Conectado!");
 
-  Serial.println("\nConectado!");
-  Serial.print("IP: ");
-  Serial.println(WiFi.localIP());
-
-  // Inicialização do mDNS
-  if (!MDNS.begin("balanca"))
-  {
-    Serial.println("Erro ao iniciar mDNS");
-  }
-  else
-  {
+  // Configuração mDNS (acesso via http://balanca.local)
+  if (MDNS.begin("balanca")) {
     MDNS.addService("http", "tcp", 80);
-    Serial.println("mDNS iniciado: http://balanca.local");
   }
 
+  // Rotas do Servidor
   server.on("/", handleRoot);
   server.on("/dados", handleDados);
   server.on("/calibrar", handleCalibrar);
   server.on("/zero", handleZero);
-  server.onNotFound(handleNotFound);
+  server.onNotFound([]() { server.send(404, "text/plain", "Nao encontrado"); });
+  
   server.begin();
-  Serial.println("Servidor iniciado");
+  Serial.println("Servidor pronto em: " + WiFi.localIP().toString());
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void loop() {
   server.handleClient();
   
-  // Leia o peso já com média diretamente
-  // Isso substitui a necessidade da sua função complexa calcularMedia
-  pesoAtual = scale.get_units(15); 
+  // Otimização: Apenas 10 amostras para manter a fluidez do site
+  // Se scale.is_ready() for falso, get_units pula a leitura para não travar o loop
+  if (scale.is_ready()) {
+    pesoAtual = scale.get_units(10); 
+  }
 
-  Serial.print("Peso: ");
-  Serial.println(pesoAtual, 2);
-
-  delay(100); 
+  // Monitoramento Serial (opcional)
+  static unsigned long lastPrint = 0;
+  if (millis() - lastPrint > 1000) {
+    Serial.printf("Peso: %.2f g\n", pesoAtual);
+    lastPrint = millis();
+  }
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
