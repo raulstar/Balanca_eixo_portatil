@@ -1,47 +1,50 @@
 #include <Arduino.h>
-#include "medida.h"
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ─── Pinos ────────────────────────────────────────────────────────
+#include "HX711.h"
+
 #define DOUT_PIN  4
 #define SCK_PIN   5
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ─── Fator de calibração ──────────────────────────────────────────
-// Ajuste este valor com um peso conhecido para calibrar sua balança
-float SCALE_FACTOR = 2080.0;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ─── Instância da classe ──────────────────────────────────────────
-Medida medida(DOUT_PIN, SCK_PIN);
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// ─── Setup ────────────────────────────────────────────────────────
+HX711 scale;
+float calibration_factor = 420.0;
+
+// Retorna o peso em gramas, ou -1 em caso de timeout
+float lerPeso(int amostras = 10, int timeout_ms = 500) {
+  if (!scale.wait_ready_timeout(timeout_ms)) {
+    Serial.println("Timeout ao aguardar HX711.");
+    return -1.0;
+  }
+
+  float peso = scale.get_units(amostras);
+
+  // Filtro de valores negativos (ruído)
+  if (peso < 0) peso = 0;
+
+  return peso;
+}
+
 void setup() {
   Serial.begin(115200);
-  delay(500);
-  medida.begin(SCALE_FACTOR);
+  Serial.println("Iniciando balança...");
 
+  scale.begin(DOUT_PIN, SCK_PIN);
+
+  Serial.println("Zerando balança... Retire qualquer objeto!");
+  delay(2000);
+
+  scale.set_scale(calibration_factor);
+  scale.tare();
+
+  Serial.println("Pronto! Coloque o objeto.");
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// ─── Loop ─────────────────────────────────────────────────────────
 void loop() {
-  if (medida.isReady()) {
+  float peso = lerPeso(10, 500);
 
-    // Leitura digital crua do ADC (sem escala, sem tare)
-    long  digitalRaw = medida.readDigitalRaw();
-
-    // Leitura em gramas sem filtro (com escala e tare aplicados)
-    float rawGrams   = medida.readRawGrams();
-
-    // Leitura com filtro aplicado
-    float filtered   = medida.readFiltered();
-
-    Serial.printf("│ %15ld │ %13.2f g │ %13.2f g │\n",
-                  digitalRaw, rawGrams, filtered);
-
-  } else {
-    Serial.println("HX711 não está pronto.");
+  if (peso >= 0) {
+    Serial.print("Peso: ");
+    Serial.print(peso, 2);
+    Serial.println(" g");
   }
 
   delay(500);
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
