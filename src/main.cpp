@@ -125,12 +125,11 @@ void handleCalibrar()
   server.send(200, "text/plain", "Calibracao realizada com " + String(pesoConhecido, 2) + " kg.");
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void handleZero()
-{
+void handleZero() {
   scale.tare();
+  pesoAtual = 0; // Força a variável a zerar para o próximo envio de JSON
   Serial.println("Tara realizada.");
-  server.send(200, "text/plain", "Zero (tara) aplicado com sucesso.");
+  server.send(200, "text/plain", "Zero aplicado com sucesso.");
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -180,21 +179,16 @@ void setup()
   Serial.println("Servidor iniciado");
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void loop()
-{
+void loop() {
   server.handleClient();
-  pesoAtual = scale.get_units(10);
-  mediaFinal = calcularMedia(pesoAtual);
+  
+  // Leia o peso já com média diretamente
+  // Isso substitui a necessidade da sua função complexa calcularMedia
+  pesoAtual = scale.get_units(15); 
 
-  Serial.println("");
-  Serial.print("peso: ");
-  Serial.print(pesoAtual, 2);
-  Serial.println(" g");
+  Serial.print("Peso: ");
+  Serial.println(pesoAtual, 2);
 
-  Serial.print(pesoAtual / 1000, 1);
-  Serial.println(" kg");
-
-  delay(200);
+  delay(100); 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
