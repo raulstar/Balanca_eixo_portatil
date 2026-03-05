@@ -43,8 +43,44 @@ void loop() {
   if (peso >= 0) {
     Serial.print("Peso: ");
     Serial.print(peso, 2);
-    Serial.println(" g");
+   // Serial.println(" g");
   }
 
   delay(500);
+}
+
+float calcularMedia(float peso) {
+  const int    NUM_AMOSTRAS     = 10;
+  const float  LIMITE_INFERIOR  = 0.0;
+  const float  LIMITE_SUPERIOR  = 10000.0;
+  const int    TIMEOUT_MS       = 500;
+
+  float amostras[NUM_AMOSTRAS];
+  float soma          = 0.0;
+  float media         = 0.0;
+  int   validas       = 0;
+
+  for (int i = 0; i < NUM_AMOSTRAS; i++) {
+
+    if (!scale.wait_ready_timeout(TIMEOUT_MS)) {
+      Serial.println("Timeout na amostra " + String(i));
+      amostras[i] = peso; // usa o valor recebido como fallback
+    } else {
+      amostras[i] = scale.get_units(1);
+    }
+
+    // Descarta ruídos fora dos limites
+    if (amostras[i] >= LIMITE_INFERIOR && amostras[i] <= LIMITE_SUPERIOR) {
+      soma += amostras[i];
+      validas++;
+    }
+  }
+
+  if (validas == 0) {
+    Serial.println("Nenhuma amostra válida. Retornando peso recebido.");
+    return peso;
+  }
+
+  media = soma / (float)validas;
+  return media;
 }
