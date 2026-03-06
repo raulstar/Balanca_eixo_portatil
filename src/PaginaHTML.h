@@ -122,14 +122,17 @@ const char pagina_html[] PROGMEM = R"rawliteral(
     }
 
     function buscarDados() {
-      fetch('/dados')
-        .then(r => r.json())
-        .then(d => {
-          document.getElementById('peso').innerText      = d.pesoAtual.toFixed(2);
-          document.getElementById('calibracao').innerText = d.calibration_factor.toFixed(4);
-        })
-        .catch(() => setStatus('Erro ao buscar dados.'));
-    }
+  fetch('/dados')
+    .then(r => r.json())
+    .then(d => {
+      // Peso negativo próximo de zero é ruído — exibe 0.00
+      const peso = d.pesoAtual < -0.5 ? d.pesoAtual.toFixed(2)
+                                       : Math.max(0, d.pesoAtual).toFixed(2);
+      document.getElementById('peso').innerText       = peso;
+      document.getElementById('calibracao').innerText = d.calibration_factor.toFixed(4);
+    })
+    .catch(() => setStatus('Erro ao buscar dados.'));
+}
 
     function calibrar() {
       const peso = document.getElementById('pesoConhecido').value;
@@ -153,7 +156,7 @@ const char pagina_html[] PROGMEM = R"rawliteral(
     }
 
     buscarDados();
-    setInterval(buscarDados, 2000);
+    setInterval(buscarDados, 500);
   </script>
 </body>
 </html>

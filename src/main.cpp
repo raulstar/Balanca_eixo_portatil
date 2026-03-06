@@ -15,8 +15,12 @@ WebServer server(80);
 const char *ssid = "REVLO";
 const char *password = "Revlo!2024";
 
-float calibration_factor = 420.0;
+float calibration_factor = 88.0706;
 float pesoAtual = 0;
+float somaAmostras = 0;
+int contAmostras = 0;
+const int NUM_AMOSTRAS = 10;
+
 
 // --- FUNÇÕES DE CONTROLE ---
 
@@ -49,9 +53,9 @@ void handleRoot() {
 }
 
 void handleDados() {
-  // Criando o JSON com o peso atualizado no momento da requisição
+  String pesoStr = (pesoAtual > 0) ? String(pesoAtual, 4) : "null";
   String json = "{";
-  json += "\"pesoAtual\":" + String(pesoAtual, 4) + ",";
+  json += "\"pesoAtual\":" + pesoStr + ",";
   json += "\"calibration_factor\":" + String(calibration_factor, 4);
   json += "}";
   server.send(200, "application/json", json);
@@ -110,16 +114,20 @@ void setup() {
 
 void loop() {
   server.handleClient();
-  
-  // Otimização: Apenas 10 amostras para manter a fluidez do site
-  // Se scale.is_ready() for falso, get_units pula a leitura para não travar o loop
+
   if (scale.is_ready()) {
-    pesoAtual = scale.get_units(10); 
+    somaAmostras += scale.get_units(1);  // apenas 1 leitura por ciclo
+    contAmostras++;
+
+    if (contAmostras >= NUM_AMOSTRAS) {
+      pesoAtual = somaAmostras / contAmostras;
+      somaAmostras = 0;
+      contAmostras = 0;
+    }
   }
 
-  // Monitoramento Serial (opcional)
   static unsigned long lastPrint = 0;
-  if (millis() - lastPrint > 1000) {
+  if (millis() - lastPrint > 500) {
     Serial.printf("Peso: %.2f g\n", pesoAtual);
     lastPrint = millis();
   }
