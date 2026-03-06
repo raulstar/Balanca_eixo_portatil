@@ -69,7 +69,7 @@ float filtro(float amostra)
     somaQuad += (amostras[i] - media) * (amostras[i] - media);
   float desvioPadrao = sqrt(somaQuad / N);
 
-  Serial.printf("[filtro] Media: %.4f | Desvio Padrao: %.4f\n", media, desvioPadrao);
+  //Serial.printf("[filtro] Media: %.4f | Desvio Padrao: %.4f\n", media, desvioPadrao);
 
   // 3. Moda — grupo mais frequente dentro da tolerância
   int   melhorContagem = 0;
@@ -89,7 +89,7 @@ float filtro(float amostra)
     }
   }
 
-  Serial.printf("[filtro] Moda: %.4f | Grupo: %d amostras\n", melhorCentro, melhorContagem);
+  //Serial.printf("[filtro] Moda: %.4f | Grupo: %d amostras\n", melhorCentro, melhorContagem);
 
   // 4. Média apenas das amostras dentro da moda
   float somaFiltrada  = 0;
@@ -110,8 +110,8 @@ float filtro(float amostra)
 
   ultimoValido = (countFiltrado > 0) ? (somaFiltrada / countFiltrado) : media;
 
-  Serial.printf("[filtro] Resultado: %.4f (usou %d/%d amostras)\n",
-                ultimoValido, countFiltrado, N);
+  //Serial.printf("[filtro] Resultado: %.4f (usou %d/%d amostras)\n",
+  //              ultimoValido, countFiltrado, N);
 
   count = 0; // reseta buffer
   return ultimoValido;
