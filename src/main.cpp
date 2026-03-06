@@ -17,9 +17,6 @@ const char *password = "Revlo!2024";
 
 float calibration_factor = 88.0706;
 float pesoAtual = 0;
-float somaAmostras = 0;
-int contAmostras = 0;
-const int NUM_AMOSTRAS = 10;
 bool zero = 0;
 bool calibrando = 0;
 
@@ -147,15 +144,7 @@ void loop()
   zero = calculoDeZero(pesoAtual);
   if (scale.is_ready())
   {
-    somaAmostras += scale.get_units(1); // apenas 1 leitura por ciclo
-    contAmostras++;
-
-    if (contAmostras >= NUM_AMOSTRAS)
-    {
-      pesoAtual = somaAmostras / contAmostras;
-      somaAmostras = 0;
-      contAmostras = 0;
-    }
+    pesoAtual = scale.get_units(5); // apenas 1 leitura por ciclo
   }
 
   static unsigned long lastPrint = 0;
