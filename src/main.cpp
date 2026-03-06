@@ -32,7 +32,7 @@ bool calculoDeZero(float peso)
 // -------------------------------------------------------
 float filtro(float amostra)
 {
-  const int   N          = 20;
+  const int   N          = 10;
   const float FAIXA_MODA = 0.5; // gramas
 
   static float amostras[N];
@@ -104,7 +104,7 @@ float filtro(float amostra)
     }
     else
     {
-      Serial.printf("[filtro] Descartado: %.4f\n", amostras[i]);
+      //Serial.printf("[filtro] Descartado: %.4f\n", amostras[i]);
     }
   }
 
