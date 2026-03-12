@@ -17,6 +17,7 @@ const char *password = "Revlo!2024";
 float calibration_factor = 88.0706;
 float pesoAtual          = 0;
 bool  zero               = false;
+const int   N          = 10;
 
 // -------------------------------------------------------
 // CALCULO DE ZERO
@@ -32,8 +33,7 @@ bool calculoDeZero(float peso)
 // -------------------------------------------------------
 float filtro(float amostra)
 {
-  const int   N          = 10;
-  const float FAIXA_MODA = 0.5; // gramas
+    const float FAIXA_MODA = 0.5; // gramas
 
   static float amostras[N];
   static int   count          = 0;

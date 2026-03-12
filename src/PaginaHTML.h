@@ -35,8 +35,8 @@ const char pagina_html[] PROGMEM = R"rawliteral(
       justify-content: space-between;
       align-items: center;
     }
-    .label { color: #666; font-size: 14px; }
-    .valor { color: #007bff; font-size: 20px; font-weight: bold; }
+    .label   { color: #666; font-size: 14px; }
+    .valor   { color: #007bff; font-size: 20px; font-weight: bold; }
     .unidade { color: #999; font-size: 13px; margin-left: 4px; }
 
     .input-group {
@@ -67,12 +67,10 @@ const char pagina_html[] PROGMEM = R"rawliteral(
       flex: 1;
       color: white;
     }
-    .btn-atualizar  { background: #007bff; margin-top: 16px; width: 100%; }
-    .btn-atualizar:hover  { background: #0056b3; }
-    .btn-calibrar   { background: #28a745; }
-    .btn-calibrar:hover   { background: #1e7e34; }
-    .btn-zero       { background: #dc3545; }
-    .btn-zero:hover       { background: #a71d2a; }
+    .btn-calibrar       { background: #28a745; }
+    .btn-calibrar:hover { background: #1e7e34; }
+    .btn-zero           { background: #dc3545; }
+    .btn-zero:hover     { background: #a71d2a; }
 
     #status {
       margin-top: 14px;
@@ -90,7 +88,7 @@ const char pagina_html[] PROGMEM = R"rawliteral(
       <span class="label">Peso Atual</span>
       <span>
         <span class="valor" id="peso">--</span>
-        <span class="unidade">kg</span>
+        <span class="unidade">g</span>
       </span>
     </div>
 
@@ -101,17 +99,14 @@ const char pagina_html[] PROGMEM = R"rawliteral(
       </span>
     </div>
 
-    <!-- Calibração -->
     <div class="input-group">
-      <input type="number" id="pesoConhecido" placeholder="Peso conhecido (kg)" step="0.01" min="0">
+      <input type="number" id="pesoConhecido" placeholder="Peso conhecido (g)" step="0.01" min="0">
     </div>
 
     <div class="btn-row">
       <button class="btn-calibrar" onclick="calibrar()">Calibrar</button>
-      <button class="btn-zero"     onclick="zero()">Zero (Tara)</button>
+      <button class="btn-zero"     onclick="zerar()">Zero (Tara)</button>
     </div>
-
-    <button class="btn-atualizar" onclick="buscarDados()">Atualizar</button>
 
     <div id="status"></div>
   </div>
@@ -122,17 +117,17 @@ const char pagina_html[] PROGMEM = R"rawliteral(
     }
 
     function buscarDados() {
-  fetch('/dados')
-    .then(r => r.json())
-    .then(d => {
-      // Peso negativo próximo de zero é ruído — exibe 0.00
-      const peso = d.pesoAtual < -0.5 ? d.pesoAtual.toFixed(2)
-                                       : Math.max(0, d.pesoAtual).toFixed(2);
-      document.getElementById('peso').innerText       = peso;
-      document.getElementById('calibracao').innerText = d.calibration_factor.toFixed(4);
-    })
-    .catch(() => setStatus('Erro ao buscar dados.'));
-}
+      fetch('/dados')
+        .then(r => r.json())
+        .then(d => {
+          const peso = d.pesoAtual !== null
+            ? Math.max(0, d.pesoAtual).toFixed(2)
+            : '--';
+          document.getElementById('peso').innerText      = peso;
+          document.getElementById('calibracao').innerText = d.calibration_factor.toFixed(4);
+        })
+        .catch(() => setStatus('Erro ao buscar dados.'));
+    }
 
     function calibrar() {
       const peso = document.getElementById('pesoConhecido').value;
@@ -140,14 +135,14 @@ const char pagina_html[] PROGMEM = R"rawliteral(
         setStatus('Informe um peso conhecido valido.');
         return;
       }
-      setStatus('Calibrando...');
+      setStatus('Calibrando... aguarde ~10s.');
       fetch('/calibrar?peso=' + parseFloat(peso))
         .then(r => r.text())
         .then(msg => setStatus(msg))
         .catch(() => setStatus('Erro ao calibrar.'));
     }
 
-    function zero() {
+    function zerar() {
       setStatus('Zerando...');
       fetch('/zero')
         .then(r => r.text())
@@ -155,7 +150,6 @@ const char pagina_html[] PROGMEM = R"rawliteral(
         .catch(() => setStatus('Erro ao zerar.'));
     }
 
-    buscarDados();
     setInterval(buscarDados, 500);
   </script>
 </body>
