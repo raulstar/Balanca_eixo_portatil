@@ -24,7 +24,6 @@ const char pagina_html[] PROGMEM = R"rawliteral(
             flex-direction: column;
         }
 
-        /* Cabeçalho inspirado na segunda página */
         .header {
             display: flex;
             justify-content: space-between;
@@ -46,7 +45,6 @@ const char pagina_html[] PROGMEM = R"rawliteral(
             color: #888;
         }
 
-        /* Conteúdo Principal */
         .main-content {
             flex: 1;
             display: flex;
@@ -66,9 +64,9 @@ const char pagina_html[] PROGMEM = R"rawliteral(
             border: 1px solid rgba(255,255,255,0.1);
         }
 
-        h1 { 
-            color: #ffffff; 
-            margin-bottom: 30px; 
+        h1 {
+            color: #ffffff;
+            margin-bottom: 30px;
             font-size: 22px;
             letter-spacing: 1px;
         }
@@ -139,7 +137,6 @@ const char pagina_html[] PROGMEM = R"rawliteral(
             font-style: italic;
         }
 
-        /* Rodapé */
         .footer {
             padding: 20px;
             text-align: center;
@@ -168,13 +165,6 @@ const char pagina_html[] PROGMEM = R"rawliteral(
                 <span>
                     <span class="valor" id="peso">--</span>
                     <span class="unidade">g</span>
-                </span>
-            </div>
-
-            <div class="campo">
-                <span class="label">Fator Calib.</span>
-                <span>
-                    <span class="valor" id="calibracao" style="font-size: 18px;">--</span>
                 </span>
             </div>
 
@@ -208,7 +198,6 @@ const char pagina_html[] PROGMEM = R"rawliteral(
                         ? Math.max(0, d.pesoAtual).toFixed(2)
                         : '--';
                     document.getElementById('peso').innerText = peso;
-                    document.getElementById('calibracao').innerText = d.calibration_factor.toFixed(4);
                 })
                 .catch(() => setStatus('Erro na conexão com a balança...'));
         }
@@ -234,7 +223,6 @@ const char pagina_html[] PROGMEM = R"rawliteral(
                 .catch(() => setStatus('Erro ao executar tara.'));
         }
 
-        // Atualização automática a cada 500ms
         setInterval(buscarDados, 500);
     </script>
 </body>
