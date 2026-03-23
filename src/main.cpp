@@ -20,8 +20,8 @@
 HX711     scale;
 WebServer server(80);
 
-const char *ssid     = "REVLO";
-const char *password = "Revlo!2024";
+const char *ssid     = "Revlo_Claro";
+const char *password = "Revlo@2025";
 
 float calibration_factor = -409.8214;
 float pesoAtual          = 0.0;
@@ -87,15 +87,6 @@ void realizarCalibracao(float pesoConhecido)
 
 // ─────────────────────────────────────────
 //  NEXTION — LÊ EVENTOS DE TOQUE
-//
-//  No Nextion Editor configure os botões:
-//    bCalib → Touch Release Event:
-//      prints "CALIB:",0
-//      prints tInput.txt,0
-//      printh FF FF FF
-//
-//    bZero → Touch Release Event:
-//      printh 5A 45 52 4F FF FF FF
 // ─────────────────────────────────────────
 void lerNextion()
 {
@@ -106,7 +97,6 @@ void lerNextion()
 
   if (entrada.length() == 0) return;
 
-  // Formato esperado do botão Calibrar: "CALIB:500.00"
   if (entrada.startsWith("CALIB:"))
   {
     String valorStr = entrada.substring(6);
@@ -175,12 +165,15 @@ void handleZero()
   scale.tare();
   pesoAtual = 0.0;
   Serial.println("Tara realizada.");
+
+  // Responde imediatamente ao navegador
+  if (server.client()) {
+    server.send(200, "text/plain", "Balança zerada com sucesso!");
+  }
+
+  // Comandos da tela física
   nextionCmd("tPeso.txt=\"Zerado!\"");
   delay(800);
-
-  // Responde ao servidor Web apenas se a chamada vier via HTTP
-  if (server.client())
-    server.send(200, "text/plain", "Balança zerada com sucesso.");
 }
 
 // ─────────────────────────────────────────

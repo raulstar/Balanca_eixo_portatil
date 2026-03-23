@@ -27,163 +27,227 @@ const char pagina_html[] PROGMEM = R"rawliteral(
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 20px 40px;
-            background: rgba(255, 255, 255, 0.05);
+            align-items: flex-start;
+            padding: 18px 24px 10px 24px;
+            background: #0a0e27;
         }
 
         .logo {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
-            color: #ff4444;
+            color: #ff3333;
+            line-height: 1;
+        }
+
+        .logo-sub {
+            font-size: 10px;
+            color: #888;
+            letter-spacing: 2px;
+            margin-top: 3px;
+            text-transform: uppercase;
         }
 
         .header-right {
             display: flex;
-            gap: 20px;
-            font-size: 12px;
-            color: #888;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .header-info-row {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+        }
+
+        .header-info-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header-info-title {
+            font-size: 9px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
         }
 
         .main-content {
             flex: 1;
             display: flex;
+            flex-direction: column;
             justify-content: center;
-            align-items: center;
-            padding: 20px;
+            padding: 10px 16px;
+            gap: 10px;
         }
 
-        .card {
-            background: #1a1f3d;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-align: center;
-            width: 100%;
-            max-width: 450px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        h1 {
-            color: #ffffff;
-            margin-bottom: 30px;
-            font-size: 22px;
-            letter-spacing: 1px;
-        }
-
-        .campo {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 18px 25px;
-            margin: 15px 0;
+        .panel {
+            background: #131729;
+            border-radius: 10px;
+            padding: 18px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border: 1px solid rgba(255,255,255,0.05);
         }
 
-        .label { color: #aaa; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
-        .valor { color: #4488ff; font-size: 26px; font-weight: bold; }
-        .unidade { color: #666; font-size: 14px; margin-left: 5px; }
-
-        .input-group {
-            margin: 25px 0 15px 0;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 15px;
-            background: #0a0e27;
-            border: 1px solid #333;
-            border-radius: 8px;
-            font-size: 16px;
-            text-align: center;
-            color: white;
-            outline: none;
-        }
-
-        .input-group input:focus {
-            border-color: #4488ff;
-        }
-
-        .btn-row {
+        .panel-left {
             display: flex;
-            gap: 15px;
-            margin-top: 10px;
+            flex-direction: column;
+            gap: 4px;
+            text-align: right;
+            align-items: flex-end;
         }
 
-        button {
-            padding: 15px;
+        .panel-label {
+            font-size: 10px;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .panel-value {
+            font-size: 42px;
+            font-weight: bold;
+            color: #4488ff;
+            line-height: 1;
+            letter-spacing: 1px;
+        }
+
+        .panel-value.green {
+            color: #00e676;
+        }
+
+        .panel-unit {
+            font-size: 16px;
+            font-weight: normal;
+            color: #555;
+            margin-left: 6px;
+            vertical-align: bottom;
+            line-height: 1.8;
+        }
+
+        .btn-zero {
+            background: #1e2340;
+            color: #ffffff;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
+            padding: 18px 32px;
+            font-size: 15px;
             font-weight: bold;
+            letter-spacing: 1.5px;
             cursor: pointer;
-            flex: 1;
-            color: white;
             text-transform: uppercase;
             transition: opacity 0.2s;
+            min-width: 120px;
         }
 
-        .btn-calibrar { background: #28a745; }
-        .btn-zero     { background: #dc3545; }
-        button:hover  { opacity: 0.8; }
+        .btn-zero:hover { opacity: 0.8; }
+
+        .btn-somar {
+            background: #ff3333;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 18px 32px;
+            font-size: 15px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: opacity 0.2s;
+            min-width: 120px;
+        }
+
+        .btn-somar:hover { opacity: 0.8; }
+
+        .bottom-row {
+            display: flex;
+            gap: 10px;
+            padding: 6px 16px 20px 16px;
+        }
+
+        .btn-bottom {
+            flex: 1;
+            background: #131729;
+            color: #aaa;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 8px;
+            padding: 15px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: opacity 0.2s, background 0.2s;
+        }
+
+        .btn-bottom:hover { background: #1e2340; opacity: 1; }
 
         #status {
-            margin-top: 20px;
-            font-size: 13px;
-            color: #888;
-            min-height: 20px;
-            font-style: italic;
-        }
-
-        .footer {
-            padding: 20px;
             text-align: center;
-            font-size: 11px;
-            color: #444;
-            background: rgba(0,0,0,0.2);
+            font-size: 12px;
+            color: #555;
+            font-style: italic;
+            padding: 0 16px 8px 16px;
+            min-height: 18px;
         }
     </style>
 </head>
 <body>
 
     <header class="header">
-        <div class="logo">REVLO</div>
+        <div>
+            <div class="logo">REVLO</div>
+            <div class="logo-sub">Sistema de Pesagem</div>
+        </div>
         <div class="header-right">
-            <span>SISTEMA DE PESAGEM v2.0</span>
-            <span>ESP32 CONNECTED</span>
+            <div class="header-info-row">
+                <div class="header-info-block">
+                    <span class="header-info-title">ID Dispositivo</span>
+                </div>
+                <div class="header-info-block">
+                    <span class="header-info-title">Bateria</span>
+                </div>
+            </div>
         </div>
     </header>
 
     <main class="main-content">
-        <div class="card">
-            <h1>Balança de Eixo</h1>
 
-            <div class="campo">
-                <span class="label">Peso Atual</span>
+        <div class="panel">
+            <button class="btn-zero" onclick="zerar()">ZERO</button>
+            <div class="panel-left">
+                <span class="panel-label">Peso Atual</span>
                 <span>
-                    <span class="valor" id="peso">--</span>
-                    <span class="unidade">g</span>
+                    <span class="panel-value" id="peso">--</span>
+                    <span class="panel-unit">KG</span>
                 </span>
             </div>
-
-            <div class="input-group">
-                <input type="number" id="pesoConhecido" placeholder="Peso conhecido (g)" step="0.01" min="0">
-            </div>
-
-            <div class="btn-row">
-                <button class="btn-calibrar" onclick="calibrar()">Calibrar</button>
-                <button class="btn-zero"     onclick="zerar()">Zero (Tara)</button>
-            </div>
-
-            <div id="status"></div>
         </div>
+
+        <div class="panel">
+            <button class="btn-somar">SOMAR</button>
+            <div class="panel-left">
+                <span class="panel-label">Peso Total Acumulado</span>
+                <span>
+                    <span class="panel-value green" id="pesoAcumulado">0.000</span>
+                    <span class="panel-unit">KG</span>
+                </span>
+            </div>
+        </div>
+
     </main>
 
-    <footer class="footer">
-        &copy; 2024 REVLO TECNOLOGIA - TODOS OS DIREITOS RESERVADOS
-    </footer>
+    <div id="status"></div>
+
+    <div class="bottom-row">
+        <button class="btn-bottom" onclick="calibrar()">Configurações</button>
+        <button class="btn-bottom">Ajuda</button>
+        <button class="btn-bottom">Histórico</button>
+    </div>
 
     <script>
         function setStatus(msg) {
@@ -203,7 +267,8 @@ const char pagina_html[] PROGMEM = R"rawliteral(
         }
 
         function calibrar() {
-            const peso = document.getElementById('pesoConhecido').value;
+            const pesoEl = document.getElementById('pesoConhecido');
+            const peso = pesoEl ? pesoEl.value : null;
             if (!peso || parseFloat(peso) <= 0) {
                 setStatus('Informe um peso conhecido válido.');
                 return;
@@ -216,10 +281,17 @@ const char pagina_html[] PROGMEM = R"rawliteral(
         }
 
         function zerar() {
-            setStatus('Zerando escala...');
+            setStatus('Zerando balança...');
+            
             fetch('/zero')
-                .then(r => r.text())
-                .then(msg => setStatus(msg))
+                .then(r => {
+                    if (r.ok) return r.text();
+                    throw new Error('Erro de servidor');
+                })
+                .then(msg => {
+                    setStatus(msg);
+                    setTimeout(() => setStatus(''), 3000); // apaga o status em 3s
+                })
                 .catch(() => setStatus('Erro ao executar tara.'));
         }
 
