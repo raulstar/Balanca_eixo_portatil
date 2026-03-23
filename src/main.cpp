@@ -5,18 +5,16 @@
 #include <ESPmDNS.h>
 #include "PaginaHTML.h"
 
-// ─────────────────────────────────────────
+/////////////////////////////////////////////////////////////////////////////
 //  PINOS
-// ─────────────────────────────────────────
 #define DOUT_PIN 4
 #define SCK_PIN  5
 
 #define NEXTION_SERIAL Serial2
 #define NEXTION_BAUD   9600
 
-// ─────────────────────────────────────────
+/////////////////////////////////////////////////////////////////////////////
 //  OBJETOS E VARIÁVEIS GLOBAIS
-// ─────────────────────────────────────────
 HX711     scale;
 WebServer server(80);
 
@@ -29,9 +27,8 @@ float pesoAtual          = 0.0;
 unsigned long ultimaAtualizacaoTela = 0;
 const unsigned long INTERVALO_TELA  = 200;
 
-// ─────────────────────────────────────────
+/////////////////////////////////////////////////////////////////////////////
 //  PROTÓTIPOS
-// ─────────────────────────────────────────
 void nextionCmd(const String &cmd);
 void atualizarPesoNaTela();
 void realizarCalibracao(float pesoConhecido);
@@ -41,144 +38,7 @@ void handleDados();
 void handleCalibrar();
 void handleZero();
 
-// ─────────────────────────────────────────
-//  NEXTION — AUXILIARES
-// ─────────────────────────────────────────
-void nextionCmd(const String &cmd)
-{
-  NEXTION_SERIAL.print(cmd);
-  NEXTION_SERIAL.write(0xFF);
-  NEXTION_SERIAL.write(0xFF);
-  NEXTION_SERIAL.write(0xFF);
-}
-
-void atualizarPesoNaTela()
-{
-  char buffer[24];
-  snprintf(buffer, sizeof(buffer), "%.2f g", pesoAtual);
-  nextionCmd(String("tPeso.txt=\"") + buffer + "\"");
-}
-
-// ─────────────────────────────────────────
-//  CALIBRAÇÃO
-// ─────────────────────────────────────────
-void realizarCalibracao(float pesoConhecido)
-{
-  Serial.println("\n--- INICIANDO CALIBRAÇÃO ---");
-  Serial.printf("Peso de referência: %.2f g\n", pesoConhecido);
-
-  scale.set_scale();
-  scale.tare();
-
-  nextionCmd("tPeso.txt=\"Aguarde...\"");
-  Serial.println("Aguardando 5s para estabilizar...");
-  delay(5000);
-
-  float leituraBruta = scale.get_units(20);
-  calibration_factor = leituraBruta / pesoConhecido;
-  scale.set_scale(calibration_factor);
-
-  Serial.println("--- CALIBRAÇÃO CONCLUÍDA ---");
-  Serial.printf("Novo fator: %.4f\n", calibration_factor);
-
-  nextionCmd("tPeso.txt=\"Calibrado!\"");
-  delay(1000);
-}
-
-// ─────────────────────────────────────────
-//  NEXTION — LÊ EVENTOS DE TOQUE
-// ─────────────────────────────────────────
-void lerNextion()
-{
-  if (!NEXTION_SERIAL.available()) return;
-
-  String entrada = NEXTION_SERIAL.readStringUntil('\xFF');
-  entrada.trim();
-
-  if (entrada.length() == 0) return;
-
-  if (entrada.startsWith("CALIB:"))
-  {
-    String valorStr = entrada.substring(6);
-    float peso = valorStr.toFloat();
-
-    if (peso > 0.0)
-    {
-      Serial.printf("[Nextion] Botão Calibrar pressionado — peso: %.2f g\n", peso);
-      realizarCalibracao(peso);
-    }
-    else
-    {
-      Serial.println("[Nextion] Peso inválido recebido para calibração.");
-      nextionCmd("tPeso.txt=\"Peso inv.\"");
-      delay(800);
-    }
-  }
-  else if (entrada == "ZERO")
-  {
-    Serial.println("[Nextion] Botão Zero pressionado.");
-    handleZero();
-  }
-}
-
-// ─────────────────────────────────────────
-//  HANDLERS DO SERVIDOR WEB
-// ─────────────────────────────────────────
-void handleRoot()
-{
-  server.send_P(200, "text/html", pagina_html);
-}
-
-void handleDados()
-{
-  String json = "{";
-  json += "\"pesoAtual\":"          + String(max(0.0f, pesoAtual), 4) + ",";
-  json += "\"calibration_factor\":" + String(calibration_factor, 4);
-  json += "}";
-  server.send(200, "application/json", json);
-}
-
-void handleCalibrar()
-{
-  if (!server.hasArg("peso"))
-  {
-    server.send(400, "text/plain", "Parâmetro 'peso' ausente.");
-    return;
-  }
-
-  float pesoConhecido = server.arg("peso").toFloat();
-
-  if (pesoConhecido <= 0.0)
-  {
-    server.send(400, "text/plain", "Peso inválido.");
-    return;
-  }
-
-  realizarCalibracao(pesoConhecido);
-  server.send(200, "text/plain",
-              "Calibrado com " + String(pesoConhecido, 2) + " g. Fator: "
-              + String(calibration_factor, 4));
-}
-
-void handleZero()
-{
-  scale.tare();
-  pesoAtual = 0.0;
-  Serial.println("Tara realizada.");
-
-  // Responde imediatamente ao navegador
-  if (server.client()) {
-    server.send(200, "text/plain", "Balança zerada com sucesso!");
-  }
-
-  // Comandos da tela física
-  nextionCmd("tPeso.txt=\"Zerado!\"");
-  delay(800);
-}
-
-// ─────────────────────────────────────────
-//  SETUP
-// ─────────────────────────────────────────
+/////////////////////////////////////////////////////////////////////////////
 void setup()
 {
   Serial.begin(115200);
@@ -217,9 +77,8 @@ void setup()
   Serial.println("Servidor HTTP iniciado.");
 }
 
-// ─────────────────────────────────────────
+/////////////////////////////////////////////////////////////////////////////
 //  LOOP
-// ─────────────────────────────────────────
 void loop()
 {
   server.handleClient();
@@ -243,3 +102,138 @@ void loop()
                   pesoAtual, calibration_factor);
   }
 }
+
+/////////////////////////////////////////////////////////////////////////////
+void nextionCmd(const String &cmd)
+{
+  NEXTION_SERIAL.print(cmd);
+  NEXTION_SERIAL.write(0xFF);
+  NEXTION_SERIAL.write(0xFF);
+  NEXTION_SERIAL.write(0xFF);
+}
+/////////////////////////////////////////////////////////////////////////////
+
+void atualizarPesoNaTela()
+{
+  char buffer[24];
+  snprintf(buffer, sizeof(buffer), "%.2f g", pesoAtual);
+  nextionCmd(String("tPeso.txt=\"") + buffer + "\"");
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//  CALIBRAÇÃO
+void realizarCalibracao(float pesoConhecido)
+{
+  Serial.println("\n--- INICIANDO CALIBRAÇÃO ---");
+  Serial.printf("Peso de referência: %.2f g\n", pesoConhecido);
+
+  scale.set_scale();
+  scale.tare();
+
+  nextionCmd("tPeso.txt=\"Aguarde...\"");
+  Serial.println("Aguardando 5s para estabilizar...");
+  delay(5000);
+
+  float leituraBruta = scale.get_units(20);
+  calibration_factor = leituraBruta / pesoConhecido;
+  scale.set_scale(calibration_factor);
+
+  Serial.println("--- CALIBRAÇÃO CONCLUÍDA ---");
+  Serial.printf("Novo fator: %.4f\n", calibration_factor);
+
+  nextionCmd("tPeso.txt=\"Calibrado!\"");
+  delay(1000);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//  NEXTION — LÊ EVENTOS DE TOQUE
+void lerNextion()
+{
+  if (!NEXTION_SERIAL.available()) return;
+
+  String entrada = NEXTION_SERIAL.readStringUntil('\xFF');
+  entrada.trim();
+
+  if (entrada.length() == 0) return;
+
+  if (entrada.startsWith("CALIB:"))
+  {
+    String valorStr = entrada.substring(6);
+    float peso = valorStr.toFloat();
+
+    if (peso > 0.0)
+    {
+      Serial.printf("[Nextion] Botão Calibrar pressionado — peso: %.2f g\n", peso);
+      realizarCalibracao(peso);
+    }
+    else
+    {
+      Serial.println("[Nextion] Peso inválido recebido para calibração.");
+      nextionCmd("tPeso.txt=\"Peso inv.\"");
+      delay(800);
+    }
+  }
+  else if (entrada == "ZERO")
+  {
+    Serial.println("[Nextion] Botão Zero pressionado.");
+    handleZero();
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//  HANDLERS DO SERVIDOR WEB
+void handleRoot()
+{
+  server.send_P(200, "text/html", pagina_html);
+}
+/////////////////////////////////////////////////////////////////////////////
+
+void handleDados()
+{
+  String json = "{";
+  json += "\"pesoAtual\":"          + String(max(0.0f, pesoAtual), 4) + ",";
+  json += "\"calibration_factor\":" + String(calibration_factor, 4);
+  json += "}";
+  server.send(200, "application/json", json);
+}
+/////////////////////////////////////////////////////////////////////////////
+
+void handleCalibrar()
+{
+  if (!server.hasArg("peso"))
+  {
+    server.send(400, "text/plain", "Parâmetro 'peso' ausente.");
+    return;
+  }
+
+  float pesoConhecido = server.arg("peso").toFloat();
+
+  if (pesoConhecido <= 0.0)
+  {
+    server.send(400, "text/plain", "Peso inválido.");
+    return;
+  }
+
+  realizarCalibracao(pesoConhecido);
+  server.send(200, "text/plain",
+              "Calibrado com " + String(pesoConhecido, 2) + " g. Fator: "
+              + String(calibration_factor, 4));
+}
+/////////////////////////////////////////////////////////////////////////////
+
+void handleZero()
+{
+  scale.tare();
+  pesoAtual = 0.0;
+  Serial.println("Tara realizada.");
+
+  // Responde imediatamente ao navegador
+  if (server.client()) {
+    server.send(200, "text/plain", "Balança zerada com sucesso!");
+  }
+
+  // Comandos da tela física
+  nextionCmd("tPeso.txt=\"Zerado!\"");
+  delay(800);
+}
+/////////////////////////////////////////////////////////////////////////////
