@@ -21,9 +21,10 @@ WebServer server(80);
 const char *ssid     = "Revlo_Claro";
 const char *password = "Revlo@2025";
 
-float calibration_factor = -409.8214;
+float calibration_factor = 88.0706;
 float pesoAtual          = 0.0;
-
+bool  zero               = false;
+const int   N          = 10;
 unsigned long ultimaAtualizacaoTela = 0;
 const unsigned long INTERVALO_TELA  = 200;
 
@@ -37,6 +38,8 @@ void handleRoot();
 void handleDados();
 void handleCalibrar();
 void handleZero();
+bool calculoDeZero(float peso);
+float filtro(float amostra);
 
 /////////////////////////////////////////////////////////////////////////////
 void setup()
@@ -85,7 +88,11 @@ void loop()
   lerNextion();
 
   if (scale.is_ready())
-    pesoAtual = scale.get_units(5);
+  {
+    float medida = scale.get_units(1);  // leitura bruta do HX711
+    zero         = calculoDeZero(medida); // avalia a leitura ATUAL, não a anterior
+    pesoAtual    = filtro(medida);        // filtra com zero já atualizado
+  }
 
   unsigned long agora = millis();
   if (agora - ultimaAtualizacaoTela >= INTERVALO_TELA)
@@ -98,8 +105,7 @@ void loop()
   if (millis() - ultimoPrint >= 500)
   {
     ultimoPrint = millis();
-    Serial.printf("Peso: %.2f g | Fator: %.4f\n",
-                  pesoAtual, calibration_factor);
+    Serial.printf("Peso: %.2f g \n", pesoAtual);
   }
 }
 
@@ -237,3 +243,97 @@ void handleZero()
   delay(800);
 }
 /////////////////////////////////////////////////////////////////////////////
+bool calculoDeZero(float peso)
+{
+  const float PESO_MINIMO = 1.0; // gramas
+  return (peso >= PESO_MINIMO);
+}
+/////////////////////////////////////////////////////////////////////////////
+
+float filtro(float amostra)
+{
+  const int   N          = 10;
+  const float FAIXA_MODA = 0.5; // gramas
+
+  static float amostras[N];
+  static int   count          = 0;
+  static float ultimoValido   = 0;
+
+  // Se não há peso válido, reseta e devolve 0
+  if (!zero)
+  {
+    count       = 0;
+    ultimoValido = 0;
+    return 0;
+  }
+
+  // Acumula amostras
+  amostras[count++] = amostra;
+
+  // Ainda coletando — devolve o último resultado calculado
+  if (count < N)
+    return ultimoValido;
+
+  // -------------------------------------------------------
+  // Buffer cheio — processa
+  // -------------------------------------------------------
+
+  // 1. Média geral
+  float soma = 0;
+  for (int i = 0; i < N; i++) soma += amostras[i];
+  float media = soma / N;
+
+  // 2. Desvio padrão
+  float somaQuad = 0;
+  for (int i = 0; i < N; i++)
+    somaQuad += (amostras[i] - media) * (amostras[i] - media);
+  float desvioPadrao = sqrt(somaQuad / N);
+
+  //Serial.printf("[filtro] Media: %.4f | Desvio Padrao: %.4f\n", media, desvioPadrao);
+
+  // 3. Moda — grupo mais frequente dentro da tolerância
+  int   melhorContagem = 0;
+  float melhorCentro   = amostras[0];
+
+  for (int i = 0; i < N; i++)
+  {
+    int contagem = 0;
+    for (int j = 0; j < N; j++)
+      if (fabs(amostras[i] - amostras[j]) <= FAIXA_MODA)
+        contagem++;
+
+    if (contagem > melhorContagem)
+    {
+      melhorContagem = contagem;
+      melhorCentro   = amostras[i];
+    }
+  }
+
+  //Serial.printf("[filtro] Moda: %.4f | Grupo: %d amostras\n", melhorCentro, melhorContagem);
+
+  // 4. Média apenas das amostras dentro da moda
+  float somaFiltrada  = 0;
+  int   countFiltrado = 0;
+
+  for (int i = 0; i < N; i++)
+  {
+    if (fabs(amostras[i] - melhorCentro) <= FAIXA_MODA)
+    {
+      somaFiltrada += amostras[i];
+      countFiltrado++;
+    }
+    else
+    {
+      //Serial.printf("[filtro] Descartado: %.4f\n", amostras[i]);
+    }
+  }
+
+  ultimoValido = (countFiltrado > 0) ? (somaFiltrada / countFiltrado) : media;
+
+  //Serial.printf("[filtro] Resultado: %.4f (usou %d/%d amostras)\n",
+  //              ultimoValido, countFiltrado, N);
+
+  count = 0; // reseta buffer
+  return ultimoValido;
+}
+
