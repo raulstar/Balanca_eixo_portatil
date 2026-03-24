@@ -267,12 +267,31 @@ const char pagina_html[] PROGMEM = R"rawliteral(
         }
 
         function calibrar() {
-            const pesoEl = document.getElementById('pesoConhecido');
-            const peso = pesoEl ? pesoEl.value : null;
-            if (!peso || parseFloat(peso) <= 0) {
-                setStatus('Informe um peso conhecido válido.');
-                return;
-            }
+    // 1. Pergunta o peso ao usuário
+    const peso = window.prompt("Insira o peso (em gramas) que está sobre a balança:", "100");
+    
+    // 2. Valida se o usuário não cancelou ou digitou algo inválido
+    if (peso === null || peso === "" || isNaN(peso)) {
+        setStatus("Calibração cancelada ou valor inválido.");
+        return;
+    }
+
+    const pesoFloat = parseFloat(peso);
+    setStatus("Enviando comando de calibração (" + pesoFloat + "g)...");
+
+    // 3. Faz a requisição para o ESP32
+    fetch('/calibrar?peso=' + pesoFloat)
+        .then(response => {
+            if (response.ok) return response.text();
+            throw new Error('Falha no servidor');
+        })
+        .then(msg => {
+            setStatus(msg); // Exibe "Calibrando... Verifique o display"
+        })
+        .catch(err => {
+            setStatus("Erro ao iniciar calibração: " + err.message);
+        });
+}
             setStatus('Calibrando... aguarde ~10s.');
             fetch('/calibrar?peso=' + parseFloat(peso))
                 .then(r => r.text())
