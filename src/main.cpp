@@ -8,25 +8,25 @@
 /////////////////////////////////////////////////////////////////////////////
 //  PINOS
 #define DOUT_PIN 4
-#define SCK_PIN  5
+#define SCK_PIN 5
 
 #define NEXTION_SERIAL Serial2
-#define NEXTION_BAUD   9600
+#define NEXTION_BAUD 9600
 
 /////////////////////////////////////////////////////////////////////////////
 //  OBJETOS E VARIÁVEIS GLOBAIS
-HX711     scale;
+HX711 scale;
 WebServer server(80);
 
 const char *ssid = "REVLO";
 const char *password = "Revlo!2024";
 
 float calibration_factor = 88.0706;
-float pesoAtual          = 0.0;
-bool  zero               = false;
+float pesoAtual = 0.0;
+bool zero = false;
 
 unsigned long ultimaAtualizacaoTela = 0;
-const unsigned long INTERVALO_TELA  = 200;
+const unsigned long INTERVALO_TELA = 200;
 
 /////////////////////////////////////////////////////////////////////////////
 //  PROTÓTIPOS
@@ -60,7 +60,7 @@ void setup()
   Serial.print("Conectando ao WiFi");
 
   int tentativas = 0;
-  const int maxTentativas = 6;
+  const int maxTentativas = 10;
 
   while (WiFi.status() != WL_CONNECTED && tentativas < maxTentativas)
   {
@@ -74,8 +74,15 @@ void setup()
     Serial.println("\nWiFi Conectado!");
     Serial.println("IP: " + WiFi.localIP().toString());
 
-    if (MDNS.begin("balanca.local"))
+    if (MDNS.begin("balanca"))
+    {
+      Serial.println("MDNS iniciado: http://balanca.local");
       MDNS.addService("http", "tcp", 80);
+    }
+    else
+    {
+      Serial.println("Erro ao iniciar MDNS");
+    }
   }
   else
   {
@@ -85,13 +92,12 @@ void setup()
   }
   // ======================================================
 
-  server.on("/",         handleRoot);
-  server.on("/dados",    handleDados);
+  server.on("/", handleRoot);
+  server.on("/dados", handleDados);
   server.on("/calibrar", handleCalibrar);
-  server.on("/zero",     handleZero);
-  server.onNotFound([]() {
-    server.send(404, "text/plain", "Não encontrado.");
-  });
+  server.on("/zero", handleZero);
+  server.onNotFound([]()
+                    { server.send(404, "text/plain", "Não encontrado."); });
 
   server.begin();
   Serial.println("Servidor HTTP iniciado.");
@@ -107,8 +113,8 @@ void loop()
   if (scale.is_ready())
   {
     float medida = scale.get_units(1);
-    zero         = calculoDeZero(medida);
-    pesoAtual    = filtro(medida);
+    zero = calculoDeZero(medida);
+    pesoAtual = filtro(medida);
   }
 
   unsigned long agora = millis();
@@ -163,7 +169,8 @@ void realizarCalibracao(float pesoConhecido)
 /////////////////////////////////////////////////////////////////////////////
 void lerNextion()
 {
-  if (!NEXTION_SERIAL.available()) return;
+  if (!NEXTION_SERIAL.available())
+    return;
 
   String entrada = NEXTION_SERIAL.readStringUntil('\xFF');
   entrada.trim();
@@ -248,7 +255,8 @@ float filtro(float amostra)
     return ultimoValido;
 
   float soma = 0;
-  for (int i = 0; i < N; i++) soma += amostras[i];
+  for (int i = 0; i < N; i++)
+    soma += amostras[i];
   float media = soma / N;
 
   int melhorContagem = 0;

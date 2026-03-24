@@ -267,36 +267,27 @@ const char pagina_html[] PROGMEM = R"rawliteral(
         }
 
         function calibrar() {
-    // 1. Pergunta o peso ao usuário
-    const peso = window.prompt("Insira o peso (em gramas) que está sobre a balança:", "100");
-    
-    // 2. Valida se o usuário não cancelou ou digitou algo inválido
-    if (peso === null || peso === "" || isNaN(peso)) {
-        setStatus("Calibração cancelada ou valor inválido.");
-        return;
-    }
+            const peso = window.prompt("Insira o peso (em gramas) que está sobre a balança:", "100");
+            
+            if (peso === null || peso === "" || isNaN(peso)) {
+                setStatus("Calibração cancelada ou valor inválido.");
+                return;
+            }
 
-    const pesoFloat = parseFloat(peso);
-    setStatus("Enviando comando de calibração (" + pesoFloat + "g)...");
+            const pesoFloat = parseFloat(peso);
+            setStatus("Enviando comando de calibração (" + pesoFloat + "g)...");
 
-    // 3. Faz a requisição para o ESP32
-    fetch('/calibrar?peso=' + pesoFloat)
-        .then(response => {
-            if (response.ok) return response.text();
-            throw new Error('Falha no servidor');
-        })
-        .then(msg => {
-            setStatus(msg); // Exibe "Calibrando... Verifique o display"
-        })
-        .catch(err => {
-            setStatus("Erro ao iniciar calibração: " + err.message);
-        });
-}
-            setStatus('Calibrando... aguarde ~10s.');
-            fetch('/calibrar?peso=' + parseFloat(peso))
-                .then(r => r.text())
-                .then(msg => setStatus(msg))
-                .catch(() => setStatus('Erro ao enviar calibração.'));
+            fetch('/calibrar?peso=' + pesoFloat)
+                .then(response => {
+                    if (response.ok) return response.text();
+                    throw new Error('Falha no servidor');
+                })
+                .then(msg => {
+                    setStatus(msg);
+                })
+                .catch(err => {
+                    setStatus("Erro ao iniciar calibração: " + err.message);
+                });
         }
 
         function zerar() {
@@ -309,7 +300,7 @@ const char pagina_html[] PROGMEM = R"rawliteral(
                 })
                 .then(msg => {
                     setStatus(msg);
-                    setTimeout(() => setStatus(''), 3000); // apaga o status em 3s
+                    setTimeout(() => setStatus(''), 3000);
                 })
                 .catch(() => setStatus('Erro ao executar tara.'));
         }
