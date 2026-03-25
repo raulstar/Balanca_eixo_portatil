@@ -24,6 +24,7 @@ const char *password = "Revlo!2024";
 float calibration_factor = 88.0706;
 float pesoAtual = 0.0;
 bool zero = false;
+float pesoConhecido = 86.0;
 
 unsigned long ultimaAtualizacaoTela = 0;
 const unsigned long INTERVALO_TELA = 50;
@@ -152,8 +153,16 @@ void atualizarPesoNaTela()
 /////////////////////////////////////////////////////////////////////////////
 void realizarCalibracao(float pesoConhecido)
 {
-  scale.set_scale();
-  scale.tare();
+  Serial.println("\n--- INICIANDO CALIBRAÇÃO ---");
+  
+  scale.set_scale(); // Reseta a escala para 1.0 para medir o valor bruto
+  scale.tare();      // Zera a balança sem peso
+  
+  Serial.print("Coloque o peso de ");
+  Serial.print(pesoConhecido);
+  nextionCmd("tPeso.txt=\"Coloque peso\"");
+  Serial.println("g. Aguardando 5s para estabilizar...");
+  delay(5000);
 
   nextionCmd("tPeso.txt=\"Aguarde...\"");
   delay(5000);
@@ -161,6 +170,9 @@ void realizarCalibracao(float pesoConhecido)
   float leituraBruta = scale.get_units(20);
   calibration_factor = leituraBruta / pesoConhecido;
   scale.set_scale(calibration_factor);
+  Serial.println("--- CALIBRAÇÃO CONCLUÍDA ---");
+  Serial.print("Novo Fator: ");
+  Serial.println(calibration_factor);
 
   nextionCmd("tPeso.txt=\"Calibrado!\"");
   delay(1000);
@@ -176,7 +188,7 @@ void lerNextion()
   entrada.trim();
 
   if (entrada == "CALIB")
-    realizarCalibracao(100.0);
+    realizarCalibracao(pesoConhecido);
   else if (entrada.startsWith("CALIB:"))
     realizarCalibracao(entrada.substring(6).toFloat());
   else if (entrada == "ZERO")
@@ -208,7 +220,7 @@ void handleCalibrar()
     return;
   }
 
-  float pesoConhecido = server.arg("peso").toFloat();
+  pesoConhecido = server.arg("peso").toFloat();
   server.send(200, "text/plain", "Calibrando...");
   realizarCalibracao(pesoConhecido);
 }
