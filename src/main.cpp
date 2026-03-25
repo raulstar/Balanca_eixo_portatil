@@ -111,9 +111,10 @@ void loop()
   server.handleClient();
   lerNextion();
 
+     float medida ;
   if (scale.is_ready())
   {
-    float medida = scale.get_units(1);
+     medida = scale.get_units(1);
     zero = calculoDeZero(medida);
     pesoAtual = filtro(medida);
   }
@@ -126,10 +127,11 @@ void loop()
   }
 
   static unsigned long ultimoPrint = 0;
-  if (millis() - ultimoPrint >= 500)
+  if (millis() - ultimoPrint >= 200)
   {
     ultimoPrint = millis();
     Serial.printf("Peso: %.2f kg \n", pesoAtual);
+    Serial.printf("Peso: %.2f kg \n", medida);
   }
 }
 
