@@ -21,7 +21,7 @@ WebServer server(80);
 const char *ssid = "REVLO";
 const char *password = "Revlo!2024";
 
-float calibration_factor = 88.0706;
+float calibration_factor = -404.42;
 float pesoAtual = 0.0;
 bool zero = false;
 float pesoConhecido = 86.0;
@@ -154,10 +154,10 @@ void atualizarPesoNaTela()
 void realizarCalibracao(float pesoConhecido)
 {
   Serial.println("\n--- INICIANDO CALIBRAÇÃO ---");
-  
+
   scale.set_scale(); // Reseta a escala para 1.0 para medir o valor bruto
   scale.tare();      // Zera a balança sem peso
-  
+
   Serial.print("Coloque o peso de ");
   Serial.print(pesoConhecido);
   nextionCmd("tPeso.txt=\"Coloque peso\"");
@@ -215,13 +215,9 @@ void handleDados()
 void handleCalibrar()
 {
   if (!server.hasArg("peso"))
-  {
-    server.send(400, "text/plain", "Erro: Informe o peso.");
-    return;
-  }
+    server.send(200, "text/plain", "Calibrando...");
 
-  pesoConhecido = server.arg("peso").toFloat();
-  server.send(200, "text/plain", "Calibrando...");
+  // usa variável global
   realizarCalibracao(pesoConhecido);
 }
 
