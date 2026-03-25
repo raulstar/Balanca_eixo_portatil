@@ -305,7 +305,7 @@ const char pagina_html[] PROGMEM = R"rawliteral(
                 .catch(() => setStatus('Erro ao executar tara.'));
         }
 
-        setInterval(buscarDados, 500);
+        setInterval(buscarDados, 100);
     </script>
 </body>
 </html>

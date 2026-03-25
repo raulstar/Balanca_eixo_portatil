@@ -26,7 +26,7 @@ float pesoAtual = 0.0;
 bool zero = false;
 
 unsigned long ultimaAtualizacaoTela = 0;
-const unsigned long INTERVALO_TELA = 200;
+const unsigned long INTERVALO_TELA = 50;
 
 /////////////////////////////////////////////////////////////////////////////
 //  PROTÓTIPOS
