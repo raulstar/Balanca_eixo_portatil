@@ -19,7 +19,7 @@ const char pagina_html[] PROGMEM = R"rawliteral(
         body {
             background-color: #0a0e27;
             color: #ffffff;
-            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -48,7 +48,7 @@ const char pagina_html[] PROGMEM = R"rawliteral(
             flex-direction: column;
             justify-content: center;
             padding: 10px;
-            gap: 10px;
+            gap: 12px;
         }
 
         .panel {
@@ -56,8 +56,19 @@ const char pagina_html[] PROGMEM = R"rawliteral(
             border-radius: 10px;
             padding: 18px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 12px; /* 🔥 espaçamento entre botão e conteúdo */
+        }
+
+        .panel-content {
+            flex: 1;
+            text-align: right;
+        }
+
+        .panel-label {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 4px;
         }
 
         .panel-value {
@@ -73,21 +84,28 @@ const char pagina_html[] PROGMEM = R"rawliteral(
         .panel-unit {
             font-size: 16px;
             color: #555;
+            margin-left: 6px;
+        }
+
+        /* 🔥 BOTÕES COM MESMO TAMANHO */
+        .panel button {
+            flex: 1;
+            max-width: 140px;
+            height: 60px;
         }
 
         button {
             border: none;
             border-radius: 8px;
-            padding: 15px;
             font-weight: bold;
             cursor: pointer;
+            letter-spacing: 1px;
         }
 
-        .btn-zero,
-.btn-somar {
-    flex: 1;
-    min-width: 120px;
-}
+        .btn-zero {
+            background: #1e2340;
+            color: white;
+        }
 
         .btn-somar {
             background: #ff3333;
@@ -104,13 +122,15 @@ const char pagina_html[] PROGMEM = R"rawliteral(
             flex: 1;
             background: #131729;
             color: #aaa;
+            padding: 15px;
         }
 
         #status {
             text-align: center;
             font-size: 12px;
             color: #555;
-            padding: 5px;
+            padding: 6px;
+            min-height: 18px;
         }
     </style>
 </head>
@@ -126,19 +146,23 @@ const char pagina_html[] PROGMEM = R"rawliteral(
 
 <main class="main-content">
 
+    <!-- 🔵 PESO ATUAL -->
     <div class="panel">
         <button class="btn-zero" onclick="zerar()">ZERO</button>
-        <div>
-            <div>Peso Atual</div>
+
+        <div class="panel-content">
+            <div class="panel-label">Peso Atual</div>
             <span class="panel-value" id="peso">--</span>
             <span class="panel-unit">KG</span>
         </div>
     </div>
 
+    <!-- 🔵 PESO ACUMULADO -->
     <div class="panel">
         <button class="btn-somar">SOMAR</button>
-        <div>
-            <div>Total</div>
+
+        <div class="panel-content">
+            <div class="panel-label">Peso Total</div>
             <span class="panel-value green" id="pesoAcumulado">0.000</span>
             <span class="panel-unit">KG</span>
         </div>
@@ -172,7 +196,6 @@ const char pagina_html[] PROGMEM = R"rawliteral(
             .catch(() => setStatus('Erro na conexão...'));
     }
 
-    // 🔥 NOVA FUNÇÃO SIMPLES (sem prompt)
     function calibrar() {
         setStatus("Iniciando calibração...");
 
