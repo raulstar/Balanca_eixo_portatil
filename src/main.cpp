@@ -127,11 +127,11 @@ void loop()
   }
 
   static unsigned long ultimoPrint = 0;
-  if (millis() - ultimoPrint >= 200)
+  if (millis() - ultimoPrint >= 400)
   {
     ultimoPrint = millis();
     Serial.printf("Peso: %.2f kg \n", pesoAtual);
-    Serial.printf("Peso: %.2f kg \n", medida);
+    //Serial.printf("Peso: %.2f kg \n", medida);
   }
 }
 
@@ -163,13 +163,15 @@ void realizarCalibracao(float pesoConhecido)
   Serial.print("Coloque o peso de ");
   Serial.print(pesoConhecido);
   nextionCmd("tPeso.txt=\"Coloque peso\"");
+  delay(2000);
+  nextionCmd("tPeso.txt=\"Conhecido\"");
   Serial.println("g. Aguardando 5s para estabilizar...");
-  delay(5000);
+  delay(2000);
 
-  nextionCmd("tPeso.txt=\"Aguarde...\"");
-  delay(5000);
+  nextionCmd("tPeso.txt=\"Calibrando...\"");
+  delay(2000);
 
-  float leituraBruta = scale.get_units(20);
+  float leituraBruta = scale.get_units(25);
   calibration_factor = leituraBruta / pesoConhecido;
   scale.set_scale(calibration_factor);
   Serial.println("--- CALIBRAÇÃO CONCLUÍDA ---");
@@ -177,7 +179,7 @@ void realizarCalibracao(float pesoConhecido)
   Serial.println(calibration_factor);
 
   nextionCmd("tPeso.txt=\"Calibrado!\"");
-  delay(1000);
+  delay(2000);
 }
 
 /////////////////////////////////////////////////////////////////////////////
