@@ -20,8 +20,8 @@ WebServer server(80);
 HardwareSerial NEXTION_SERIAL(1); // UART1
 HardwareSerial SerialPort(2);
 
-const char *ssid = "REVLO";
-const char *password = "Revlo!2024";
+const char *ssid = "Revlo_Claro";
+const char *password = "Revlo@2025";
 
 float calibration_factor = -404.42;
 float pesoAtual = 0.0;
@@ -128,22 +128,22 @@ void loop()
     atualizarPesoNaTela();
   }
 
-  static unsigned long ultimoPrint = 0;
-  if (millis() - ultimoPrint >= 400)
-  {
-    ultimoPrint = millis();
-    //Serial.printf("Peso: %.2f kg \n", pesoAtual);
-    //Serial.printf("Peso: %.2f kg \n", medida);
-  }
-  if (SerialPort.available()) {
-    Serial.write(SerialPort.read());
-  }
+  // static unsigned long ultimoPrint = 0;
+  // if (millis() - ultimoPrint >= 400)
+  // {
+  //   ultimoPrint = millis();
+  //   //Serial.printf("Peso: %.2f kg \n", pesoAtual);
+  //   //Serial.printf("Peso: %.2f kg \n", medida);
+  // // }
+  // if (SerialPort.available()) {
+  //   //Serial.write(SerialPort.read());
+  // }
 
   // Se houver dados no monitor serial (USB)
-  if (Serial.available()) {
-    SerialPort.write(Serial.read());
-    delay(100); // MUITO IMPORTANTE
-  }
+  // if (Serial.available()) {
+  //   SerialPort.write(Serial.read());
+  //   delay(100); // MUITO IMPORTANTE
+  // }
   static String buffer = "";
 
 while (SerialPort.available()) {
