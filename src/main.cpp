@@ -1,5 +1,5 @@
 //#include <Arduino.h>
-#include "HX711.h"
+//#include "HX711.h"
 #include <WiFi.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
@@ -15,7 +15,7 @@
 
 /////////////////////////////////////////////////////////////////////////////
 //  OBJETOS E VARIÁVEIS GLOBAIS
-HX711 scale;
+//HX711 scale;
 WebServer server(80);
 HardwareSerial NEXTION_SERIAL(1); // UART1
 HardwareSerial SerialPort(2);
@@ -42,7 +42,7 @@ void handleDados();
 void handleCalibrar();
 void handleZero();
 bool calculoDeZero(float peso);
-float filtro(float amostra);
+//float filtro(float amostra);
 
 /////////////////////////////////////////////////////////////////////////////
 void setup()
@@ -54,9 +54,9 @@ void setup()
   nextionCmd("page 0");
   nextionCmd("tPeso.txt=\"Iniciando...\"");
 
-  scale.begin(DOUT_PIN, SCK_PIN);
-  scale.set_scale(calibration_factor);
-  scale.tare();
+  // scale.begin(DOUT_PIN, SCK_PIN);
+  // scale.set_scale(calibration_factor);
+  // scale.tare();
 
   // ================= WIFI COM TENTATIVAS =================
   WiFi.begin(ssid, password);
@@ -113,13 +113,13 @@ void loop()
   server.handleClient();
   lerNextion();
 
-     float medida ;
-  if (scale.is_ready())
-  {
-     medida = scale.get_units(1);
-    zero = calculoDeZero(medida);
-    pesoAtual = filtro(medida);
-  }
+  //    float medida ;
+  // if (scale.is_ready())
+  // {
+  //    medida = scale.get_units(1);
+  //   zero = calculoDeZero(medida);
+  //   pesoAtual = filtro(medida);
+  // }
 
   unsigned long agora = millis();
   if (agora - ultimaAtualizacaoTela >= INTERVALO_TELA)
@@ -144,6 +144,25 @@ void loop()
     SerialPort.write(Serial.read());
     delay(100); // MUITO IMPORTANTE
   }
+  static String buffer = "";
+
+while (SerialPort.available()) {
+  char c = SerialPort.read();
+
+  // Se chegar fim de linha, processa
+  if (c == '\n') {
+    buffer.trim();
+
+    if (buffer.length() > 0) {
+      pesoAtual = buffer.toFloat();
+      Serial.println("Peso recebido: " + String(pesoAtual));
+    }
+
+    buffer = ""; // limpa buffer
+  } else {
+    buffer += c;
+  }
+}
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -164,34 +183,34 @@ void atualizarPesoNaTela()
 }
 
 /////////////////////////////////////////////////////////////////////////////
-void realizarCalibracao(float pesoConhecido)
-{
-  Serial.println("\n--- INICIANDO CALIBRAÇÃO ---");
+// void realizarCalibracao(float pesoConhecido)
+// {
+//   Serial.println("\n--- INICIANDO CALIBRAÇÃO ---");
 
-  scale.set_scale(); // Reseta a escala para 1.0 para medir o valor bruto
-  scale.tare();      // Zera a balança sem peso
+//   scale.set_scale(); // Reseta a escala para 1.0 para medir o valor bruto
+//   scale.tare();      // Zera a balança sem peso
 
-  Serial.print("Coloque o peso de ");
-  Serial.print(pesoConhecido);
-  nextionCmd("tPeso.txt=\"Coloque peso\"");
-  delay(2000);
-  nextionCmd("tPeso.txt=\"Conhecido\"");
-  Serial.println("g. Aguardando 5s para estabilizar...");
-  delay(2000);
+//   Serial.print("Coloque o peso de ");
+//   Serial.print(pesoConhecido);
+//   nextionCmd("tPeso.txt=\"Coloque peso\"");
+//   delay(2000);
+//   nextionCmd("tPeso.txt=\"Conhecido\"");
+//   Serial.println("g. Aguardando 5s para estabilizar...");
+//   delay(2000);
 
-  nextionCmd("tPeso.txt=\"Calibrando...\"");
-  delay(2000);
+//   nextionCmd("tPeso.txt=\"Calibrando...\"");
+//   delay(2000);
 
-  float leituraBruta = scale.get_units(25);
-  calibration_factor = leituraBruta / pesoConhecido;
-  scale.set_scale(calibration_factor);
-  Serial.println("--- CALIBRAÇÃO CONCLUÍDA ---");
-  Serial.print("Novo Fator: ");
-  Serial.println(calibration_factor);
+//   float leituraBruta = scale.get_units(25);
+//   calibration_factor = leituraBruta / pesoConhecido;
+//   scale.set_scale(calibration_factor);
+//   Serial.println("--- CALIBRAÇÃO CONCLUÍDA ---");
+//   Serial.print("Novo Fator: ");
+//   Serial.println(calibration_factor);
 
-  nextionCmd("tPeso.txt=\"Calibrado!\"");
-  delay(2000);
-}
+//   nextionCmd("tPeso.txt=\"Calibrado!\"");
+//   delay(2000);
+// }
 
 /////////////////////////////////////////////////////////////////////////////
 void lerNextion()
@@ -203,10 +222,10 @@ void lerNextion()
   entrada.trim();
 
   if (entrada == "CALIB")
-    realizarCalibracao(pesoConhecido);
-  else if (entrada.startsWith("CALIB:"))
-    realizarCalibracao(entrada.substring(6).toFloat());
-  else if (entrada == "ZERO")
+   // realizarCalibracao(pesoConhecido);
+  //else if (entrada.startsWith("CALIB:"))
+    //realizarCalibracao(entrada.substring(6).toFloat());
+   if (entrada == "ZERO")
     handleZero();
 }
 
@@ -233,13 +252,13 @@ void handleCalibrar()
     server.send(200, "text/plain", "Calibrando...");
 
   // usa variável global
-  realizarCalibracao(pesoConhecido);
+  //realizarCalibracao(pesoConhecido);
 }
 
 /////////////////////////////////////////////////////////////////////////////
 void handleZero()
 {
-  scale.tare();
+  //scale.tare();
   pesoAtual = 0.0;
 
   if (server.client())
@@ -256,64 +275,65 @@ bool calculoDeZero(float peso)
   return (peso >= 1.0);
 }
 
+// /////////////////////////////////////////////////////////////////////////////
+// float filtro(float amostra)
+// {
+//   const int N = 10;
+//   const float FAIXA_MODA = 0.5;
+
+//   static float amostras[N];
+//   static int count = 0;
+//   static float ultimoValido = 0;
+
+//   if (!zero)
+//   {
+//     count = 0;
+//     ultimoValido = 0;
+//     return 0;
+//   }
+
+//   amostras[count++] = amostra;
+
+//   if (count < N)
+//     return ultimoValido;
+
+//   float soma = 0;
+//   for (int i = 0; i < N; i++)
+//     soma += amostras[i];
+//   float media = soma / N;
+
+//   int melhorContagem = 0;
+//   float melhorCentro = amostras[0];
+
+//   for (int i = 0; i < N; i++)
+//   {
+//     int contagem = 0;
+//     for (int j = 0; j < N; j++)
+//       if (fabs(amostras[i] - amostras[j]) <= FAIXA_MODA)
+//         contagem++;
+
+//     if (contagem > melhorContagem)
+//     {
+//       melhorContagem = contagem;
+//       melhorCentro = amostras[i];
+//     }
+//   }
+
+//   float somaFiltrada = 0;
+//   int countFiltrado = 0;
+
+//   for (int i = 0; i < N; i++)
+//   {
+//     if (fabs(amostras[i] - melhorCentro) <= FAIXA_MODA)
+//     {
+//       somaFiltrada += amostras[i];
+//       countFiltrado++;
+//     }
+//   }
+
+//   ultimoValido = (countFiltrado > 0) ? (somaFiltrada / countFiltrado) : media;
+
+//   count = 0;
+//   return ultimoValido;
+// }
 /////////////////////////////////////////////////////////////////////////////
-float filtro(float amostra)
-{
-  const int N = 10;
-  const float FAIXA_MODA = 0.5;
-
-  static float amostras[N];
-  static int count = 0;
-  static float ultimoValido = 0;
-
-  if (!zero)
-  {
-    count = 0;
-    ultimoValido = 0;
-    return 0;
-  }
-
-  amostras[count++] = amostra;
-
-  if (count < N)
-    return ultimoValido;
-
-  float soma = 0;
-  for (int i = 0; i < N; i++)
-    soma += amostras[i];
-  float media = soma / N;
-
-  int melhorContagem = 0;
-  float melhorCentro = amostras[0];
-
-  for (int i = 0; i < N; i++)
-  {
-    int contagem = 0;
-    for (int j = 0; j < N; j++)
-      if (fabs(amostras[i] - amostras[j]) <= FAIXA_MODA)
-        contagem++;
-
-    if (contagem > melhorContagem)
-    {
-      melhorContagem = contagem;
-      melhorCentro = amostras[i];
-    }
-  }
-
-  float somaFiltrada = 0;
-  int countFiltrado = 0;
-
-  for (int i = 0; i < N; i++)
-  {
-    if (fabs(amostras[i] - melhorCentro) <= FAIXA_MODA)
-    {
-      somaFiltrada += amostras[i];
-      countFiltrado++;
-    }
-  }
-
-  ultimoValido = (countFiltrado > 0) ? (somaFiltrada / countFiltrado) : media;
-
-  count = 0;
-  return ultimoValido;
-}
