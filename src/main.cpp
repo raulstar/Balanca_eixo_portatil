@@ -1,4 +1,4 @@
-#include <Arduino.h>
+//#include <Arduino.h>
 #include "HX711.h"
 #include <WiFi.h>
 #include <WebServer.h>
@@ -10,13 +10,15 @@
 #define DOUT_PIN 4
 #define SCK_PIN 5
 
-#define NEXTION_SERIAL Serial2
-#define NEXTION_BAUD 9600
+//#define NEXTION_SERIAL Serial2
+//#define NEXTION_BAUD 9600
 
 /////////////////////////////////////////////////////////////////////////////
 //  OBJETOS E VARIÁVEIS GLOBAIS
 HX711 scale;
 WebServer server(80);
+HardwareSerial NEXTION_SERIAL(1); // UART1
+HardwareSerial SerialPort(2);
 
 const char *ssid = "REVLO";
 const char *password = "Revlo!2024";
@@ -46,8 +48,8 @@ float filtro(float amostra);
 void setup()
 {
   Serial.begin(115200);
-
-  NEXTION_SERIAL.begin(NEXTION_BAUD, SERIAL_8N1, 16, 17);
+  SerialPort.begin(9600, SERIAL_8N1, 16, 17);
+  NEXTION_SERIAL.begin(9600, SERIAL_8N1, 25, 26); // RX, TX
   delay(500);
   nextionCmd("page 0");
   nextionCmd("tPeso.txt=\"Iniciando...\"");
@@ -130,8 +132,17 @@ void loop()
   if (millis() - ultimoPrint >= 400)
   {
     ultimoPrint = millis();
-    Serial.printf("Peso: %.2f kg \n", pesoAtual);
+    //Serial.printf("Peso: %.2f kg \n", pesoAtual);
     //Serial.printf("Peso: %.2f kg \n", medida);
+  }
+  if (SerialPort.available()) {
+    Serial.write(SerialPort.read());
+  }
+
+  // Se houver dados no monitor serial (USB)
+  if (Serial.available()) {
+    SerialPort.write(Serial.read());
+    delay(100); // MUITO IMPORTANTE
   }
 }
 
@@ -235,6 +246,7 @@ void handleZero()
     server.send(200, "text/plain", "Zerado!");
 
   nextionCmd("tPeso.txt=\"Zerado!\"");
+  Serial.println("Balança zerada.");
   delay(800);
 }
 
