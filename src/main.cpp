@@ -10,9 +10,6 @@
 #define DOUT_PIN 4
 #define SCK_PIN 5
 
-//#define NEXTION_SERIAL Serial2
-//#define NEXTION_BAUD 9600
-
 /////////////////////////////////////////////////////////////////////////////
 //  OBJETOS E VARIÁVEIS GLOBAIS
 //HX711 scale;
@@ -140,10 +137,11 @@ void loop()
   // }
 
   // Se houver dados no monitor serial (USB)
-  // if (Serial.available()) {
-  //   SerialPort.write(Serial.read());
-  //   delay(100); // MUITO IMPORTANTE
-  // }
+  if (Serial.available()) {
+    SerialPort.write(Serial.read());
+    //Serial.println("Comando enviado para SerialPort");
+    //delay(100); // MUITO IMPORTANTE
+   }
   static String buffer = "";
 
 while (SerialPort.available()) {
@@ -227,6 +225,7 @@ void lerNextion()
     //realizarCalibracao(entrada.substring(6).toFloat());
    if (entrada == "ZERO")
     handleZero();
+    SerialPort.write('z');
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -263,7 +262,7 @@ void handleZero()
 
   if (server.client())
     server.send(200, "text/plain", "Zerado!");
-
+  SerialPort.write('z');
   nextionCmd("tPeso.txt=\"Zerado!\"");
   Serial.println("Balança zerada.");
   delay(800);
